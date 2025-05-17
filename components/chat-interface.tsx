@@ -13,14 +13,14 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 
+import { Message } from "@/interface/message";
 import FullscreenChat from "./fullscreen-chat";
 import ChatMessage from "./chat-message";
-import { Message } from "@/interface/message";
+import LoadingDots from "./loading";
 
 // Sample message data
 const initialMessages: Message[] = [
   {
-    id: 1,
     content: "Hello! How can I help you today?",
     sender: "bot",
     timestamp: new Date(),
@@ -32,21 +32,25 @@ export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState("");
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
+
+    setIsLoading(true);
 
     // Add user message
     const userMessage: Message = {
-      id: messages.length + 1,
       content: inputValue,
       sender: "user",
       timestamp: new Date(),
     };
 
-    // Add bot response (in a real app, this would come from an API)
+    // Delay for bot response simulation
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Add bot response
     const botResponse: Message = {
-      id: messages.length + 2,
       content: "Thanks for your message! This is a demo response.",
       sender: "bot",
       timestamp: new Date(),
@@ -54,6 +58,7 @@ export default function ChatInterface() {
 
     setMessages([...messages, userMessage, botResponse]);
     setInputValue("");
+    setIsLoading(false);
   };
 
   const toggleFullscreen = () => {
@@ -69,6 +74,7 @@ export default function ChatInterface() {
         setInputValue={setInputValue}
         handleSendMessage={handleSendMessage}
         onClose={() => setIsFullscreenOpen(false)}
+        isLoading={isLoading}
       />
     );
   }
@@ -141,9 +147,10 @@ export default function ChatInterface() {
 
               {/* Chat Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((message) => (
-                  <ChatMessage key={message.id} message={message} />
+                {messages.map((message, i) => (
+                  <ChatMessage key={i} message={message} />
                 ))}
+                {isLoading && <LoadingDots />}
               </div>
 
               {/* Chat Input */}
@@ -154,13 +161,18 @@ export default function ChatInterface() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
+                      if (e.key === "Enter" && !isLoading) {
                         handleSendMessage();
                       }
                     }}
                     className="flex-1"
+                    disabled={isLoading}
                   />
-                  <Button onClick={handleSendMessage} size="icon">
+                  <Button
+                    onClick={handleSendMessage}
+                    size="icon"
+                    disabled={isLoading}
+                  >
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
@@ -204,9 +216,10 @@ export default function ChatInterface() {
 
               {/* Chat Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((message) => (
-                  <ChatMessage key={message.id} message={message} />
+                {messages.map((message, i) => (
+                  <ChatMessage key={i} message={message} />
                 ))}
+                {isLoading && <LoadingDots />}
               </div>
 
               {/* Chat Input */}
@@ -217,13 +230,18 @@ export default function ChatInterface() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
+                      if (e.key === "Enter" && !isLoading) {
                         handleSendMessage();
                       }
                     }}
                     className="flex-1"
+                    disabled={isLoading}
                   />
-                  <Button onClick={handleSendMessage} size="icon">
+                  <Button
+                    onClick={handleSendMessage}
+                    size="icon"
+                    disabled={isLoading}
+                  >
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
