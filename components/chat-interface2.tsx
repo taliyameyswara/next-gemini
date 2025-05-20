@@ -27,56 +27,76 @@ const initialMessages: Message[] = [
   },
 ];
 
-export default function ChatInterface() {
+export default function ChatInterface2() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState("");
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
 
   const handleSendMessage = async () => {
-    setError(null);
     if (!inputValue.trim()) return;
 
     setIsLoading(true);
+    setError(null);
 
+    // Add user message
     const userMessage: Message = {
       content: inputValue,
       sender: "user",
       timestamp: new Date(),
     };
 
+    // Tambahkan pesan pengguna dan kosongkan input
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
 
     try {
-      // panggil api (/api/notes)
-      const response = await fetch("/api/notes", {
+      // Format history untuk API
+      const history = messages.map((msg) => ({
+        role: msg.sender,
+        text: msg.content,
+      }));
+
+      // Panggil API
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: inputValue }),
+        body: JSON.stringify({ message: inputValue, history }),
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || errorData.details || "Failed to fetch response"
+        );
+      }
 
+      const data = await response.json();
       const botResponse: Message = {
-        content: data.summary,
+        content: data.reply,
         sender: "bot",
         timestamp: new Date(),
       };
 
+      // Tambahkan pesan bot
       setMessages((prev) => [...prev, botResponse]);
     } catch (error) {
+      // Tambahkan pesan error sebagai pesan bot
       const errorMessage: Message = {
-        content: "Sorry, I couldn't process your request. Please try again.",
+        content:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try again.",
         sender: "bot",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : "Unknown error");
     } finally {
       setIsLoading(false);
     }
